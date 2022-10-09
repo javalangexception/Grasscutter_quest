@@ -78,7 +78,6 @@ public final class Configuration extends ConfigContainer {
         return Path.of(PLUGINS_FOLDER, path).toString();
     }
 
-    @Deprecated(forRemoval = true)
     public static String SCRIPT(String path) {
         return Path.of(SCRIPTS_FOLDER, path).toString();
     }

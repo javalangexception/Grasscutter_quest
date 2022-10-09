@@ -17,6 +17,8 @@ import javax.script.ScriptException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static emu.grasscutter.config.Configuration.SCRIPT;
+
 @ToString
 @Setter
 public class SceneBlock {
@@ -50,7 +52,8 @@ public class SceneBlock {
         this.sceneId = sceneId;
         this.setLoaded(true);
 
-        CompiledScript cs = ScriptLoader.getScript("Scene/" + sceneId + "/scene" + sceneId + "_block" + this.id + ".lua");
+        CompiledScript cs = ScriptLoader.getScriptByPath(
+            SCRIPT("Scene/" + sceneId + "/scene" + sceneId + "_block" + this.id + "." + ScriptLoader.getScriptType()));
 
         if (cs == null) {
             return null;

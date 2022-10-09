@@ -19,7 +19,7 @@ import com.google.gson.reflect.TypeToken;
 public final class JsonUtils {
     static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    @Deprecated(forRemoval = true)
+
     public static Gson getGsonFactory() {
         return gson;
     }
