@@ -32,8 +32,15 @@ public final class FileUtils {
                             .getCodeSource()
                             .getLocation()
                             .toURI();
-            fs = FileSystems.newFileSystem(Path.of(jarUri));
-            path = fs.getPath("/defaults/data");
+            //运行在idea
+            if (jarUri.getPath().contains("out")) {
+                path=Path.of(Grasscutter.class.getClassLoader().getResource("defaults/data").toURI());
+            }
+            //运行在jar
+            else{
+                fs = FileSystems.newFileSystem(Path.of(jarUri));
+                path = fs.getPath("/defaults/data");
+            }
         } catch (URISyntaxException | IOException e) {
             // Failed to load this jar. How?
             System.err.println("Failed to load jar?????????????????????");
@@ -113,14 +120,14 @@ public final class FileUtils {
 
 	public static void write(String dest, byte[] bytes) {
 		Path path = Path.of(dest);
-		
+
 		try {
 			Files.write(path, bytes);
 		} catch (IOException e) {
 			Grasscutter.getLogger().warn("Failed to write file: " + dest);
 		}
 	}
-	
+
 	public static byte[] read(String dest) {
 		return read(Path.of(dest));
 	}
@@ -131,7 +138,7 @@ public final class FileUtils {
 		} catch (IOException e) {
 			Grasscutter.getLogger().warn("Failed to read file: " + path);
 		}
-		
+
 		return new byte[0];
 	}
 
@@ -149,7 +156,7 @@ public final class FileUtils {
 
 		return new byte[0];
 	}
-	
+
 	public static byte[] read(File file) {
 		return read(file.getPath());
 	}
@@ -162,7 +169,7 @@ public final class FileUtils {
 			Grasscutter.getLogger().warn("Failed to copy resource: " + resourcePath + "\n" + exception);
 		}
 	}
-	
+
 	public static String getFilenameWithoutPath(String fileName) {
 		if (fileName.indexOf(".") > 0) {
 		   return fileName.substring(0, fileName.lastIndexOf("."));
@@ -183,14 +190,14 @@ public final class FileUtils {
 		} catch (Exception e) {
 			// Eclipse puts resources in its bin folder
 			File f = new File(System.getProperty("user.dir") + folder);
-			
+
 			if (!f.exists() || f.listFiles().length == 0) {
 				return null;
 			}
-			
+
 			result = Arrays.stream(f.listFiles()).map(File::toPath).toList();
 		}
-		
+
 		return result;
 	}
 

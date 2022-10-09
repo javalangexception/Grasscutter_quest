@@ -81,7 +81,7 @@ public class ConfigContainer {
     }
 
     public static class Structure {
-        public String resources = "./resources/";
+        public String resources = "../resources/";
         public String data = "./data/";
         public String packets = "./packets/";
         public String scripts = "resources:Scripts/";
