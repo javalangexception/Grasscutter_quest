@@ -77,12 +77,14 @@ public class QuestManager extends BasePlayerManager {
     public void onNewPlayerCreate() {
             //添加基础任务----神像相关，任务相关，openstate相关
         for (QuestData questData : GameData.getQuestDataMap().values()) {
-            GameQuest quest = getQuestById(questData.getSubId());
-            if(quest==null){
-                addQuest(questData.getSubId());
-            }else{
-                if (quest.getState()== QuestState.QUEST_STATE_UNSTARTED) {
+            if (questData.getAcceptCond()==null||questData.getAcceptCond().size()==0) {
+                GameQuest quest = getQuestById(questData.getSubId());
+                if(quest==null){
                     addQuest(questData.getSubId());
+                }else{
+                    if (quest.getState()== QuestState.QUEST_STATE_UNSTARTED) {
+                        addQuest(questData.getSubId());
+                    }
                 }
             }
         }
@@ -90,14 +92,6 @@ public class QuestManager extends BasePlayerManager {
 
     public void onLogin() {
 
-        List<GameMainQuest> activeQuests = getActiveMainQuests();
-        for (GameMainQuest quest : activeQuests) {
-            List<Position> rewindPos = quest.rewind(); // <pos, rotation>
-            if (rewindPos != null) {
-                getPlayer().getPosition().set(rewindPos.get(0));
-                getPlayer().getRotation().set(rewindPos.get(1));
-            }
-        }
     }
 
     private List<GameMainQuest> addMultMainQuests(Set<Integer> mainQuestIds) {

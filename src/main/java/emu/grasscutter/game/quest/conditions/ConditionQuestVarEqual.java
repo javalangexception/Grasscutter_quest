@@ -13,8 +13,22 @@ public class ConditionQuestVarEqual extends QuestBaseHandler {
 
     @Override
     public boolean execute(GameQuest quest, QuestData.QuestCondition condition, String paramStr, int... params) {
-        int questVarValue = quest.getMainQuest().getQuestVars()[params[0]];
-        Grasscutter.getLogger().debug("questVar {} : {}", params[0],questVarValue);
-        return questVarValue == params[1];
+        boolean result=true;
+        try {
+
+            int[] questVars = quest.getMainQuest().getQuestVars();
+            int[] param = condition.getParam();
+            for(int i=0;i<param.length;i++){
+                if (questVars[i]!=param[i]) {
+                    result=false;
+                    break;
+                }
+            }
+
+        }
+        catch (Exception e){
+            result=false;
+        }
+        return result;
     }
 }

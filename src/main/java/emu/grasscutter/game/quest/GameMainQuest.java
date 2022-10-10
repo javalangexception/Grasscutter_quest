@@ -77,7 +77,6 @@ public class GameMainQuest {
         this.rewindPositions = new HashMap<>();
         this.rewindRotations = new HashMap<>();
         addAllChildQuests();
-        addRewindPoints();
     }
 
     private void addAllChildQuests() {
