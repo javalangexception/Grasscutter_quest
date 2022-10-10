@@ -81,7 +81,7 @@ public class ConfigContainer {
     }
 
     public static class Structure {
-        public String resources = "./resources/";
+        public String resources = "../resources/";  //resources目录
         public String data = "./data/";
         public String packets = "./packets/";
         public String scripts = "resources:Scripts/";
@@ -143,7 +143,7 @@ public class ConfigContainer {
 
         /* Entities within a certain range will be loaded for the player */
         public int loadEntitiesForPlayerRange = 100;
-        public boolean enableScriptInBigWorld = false;
+        public boolean enableScriptInBigWorld = true; //场景脚本模式
         public boolean enableConsole = true;
 
         /* Kcp internal work interval (milliseconds) */
