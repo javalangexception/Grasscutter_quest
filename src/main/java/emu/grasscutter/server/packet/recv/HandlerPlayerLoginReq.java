@@ -44,6 +44,8 @@ public class HandlerPlayerLoginReq extends PacketHandler {
             session.setState(SessionState.PICKING_CHARACTER);
             session.send(new BasePacket(PacketOpcodes.DoSetPlayerBornDataNotify));
         } else {
+            //每次登录都检查并添加必要的任务
+            session.getPlayer().getQuestManager().onNewPlayerCreate();
             // Login done
             session.getPlayer().onLogin();
         }

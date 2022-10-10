@@ -75,12 +75,17 @@ public class QuestManager extends BasePlayerManager {
     }
 
     public void onNewPlayerCreate() {
-
-        List<GameMainQuest> newQuests = this.addMultMainQuests(newPlayerMainQuests);
-        //getPlayer().sendPacket(new PacketServerCondMeetQuestListUpdateNotify(newPlayerServerCondMeetQuestListUpdateNotify));
-        //getPlayer().sendPacket(new PacketFinishedParentQuestUpdateNotify(newQuests));
-
-
+            //添加基础任务----神像相关，任务相关，openstate相关
+        for (QuestData questData : GameData.getQuestDataMap().values()) {
+            GameQuest quest = getQuestById(questData.getSubId());
+            if(quest==null){
+                addQuest(questData.getSubId());
+            }else{
+                if (quest.getState()== QuestState.QUEST_STATE_UNSTARTED) {
+                    addQuest(questData.getSubId());
+                }
+            }
+        }
     }
 
     public void onLogin() {

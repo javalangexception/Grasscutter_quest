@@ -32,20 +32,8 @@ public class PlayerProgressManager extends BasePlayerDataManager {
         Handler for player login.
     **********/
     public void onPlayerLogin() {
-        // Try unlocking open states on player login. This handles accounts where unlock conditions were
-        // already met before certain open state unlocks were implemented.
         this.tryUnlockOpenStates(false);
-
-        // Send notify to the client.
         player.getSession().send(new PacketOpenStateUpdateNotify(this.player));
-
-        // Add statue quests if necessary.
-        this.addStatueQuestsOnLogin();
-
-        // Auto-unlock the first statue and map area, until we figure out how to make
-        // that particular statue interactable.
-        this.player.getUnlockedScenePoints(3).add(7);
-        this.player.getUnlockedSceneAreas(3).add(1);
 
     }
 
