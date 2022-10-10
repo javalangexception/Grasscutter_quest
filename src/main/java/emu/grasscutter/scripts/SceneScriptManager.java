@@ -188,41 +188,32 @@ public class SceneScriptManager {
         if (this.regions.size() == 0) {
             return;
         }
-
         for (var region : this.regions.values()) {
-            // currently all condition_ENTER_REGION Events check for avatar, so we have no necessary to add other types of entity
+            List<Integer> enterRegions=new ArrayList<>();
             getScene().getEntities().values()
                 .stream()
-                .filter(e -> e.getEntityType() == EntityType.Avatar.getValue() && region.getMetaRegion().contains(e.getPosition()))
+                .filter(e->region.getMetaRegion().contains(e.getPosition()))
                 .forEach(region::addEntity);
-
-            var players = region.getScene().getPlayers();
-            int targetID = 0;
-            if (players.size() > 0)
-                targetID = players.get(0).getUid();
 
             if (region.hasNewEntities()) {
                 Grasscutter.getLogger().trace("Call EVENT_ENTER_REGION_{}",region.getMetaRegion().config_id);
-                callEvent(EventType.EVENT_ENTER_REGION, new ScriptArgs(region.getConfigId())
-                    .setSourceEntityId(region.getId())
-                    .setTargetEntityId(targetID)
-                );
-
+                for (Integer entity : region.getEntities()) {
+                    callEvent(EventType.EVENT_ENTER_REGION, new ScriptArgs(region.getConfigId())
+                        .setSourceEntityId(region.getId())
+                        .setTargetEntityId(entity)
+                    );
+                }
                 region.resetNewEntities();
             }
-
             for (int entityId : region.getEntities()) {
                 if (getScene().getEntityById(entityId) == null || !region.getMetaRegion().contains(getScene().getEntityById(entityId).getPosition())) {
                     region.removeEntity(entityId);
-
+                    callEvent(EventType.EVENT_LEAVE_REGION, new ScriptArgs(region.getConfigId())
+                        .setSourceEntityId(region.getId())
+                        .setTargetEntityId(region.getFirstEntityId()));
                 }
             }
             if (region.entityLeave()) {
-                callEvent(EventType.EVENT_LEAVE_REGION, new ScriptArgs(region.getConfigId())
-                    .setSourceEntityId(region.getId())
-                    .setTargetEntityId(region.getFirstEntityId())
-                );
-
                 region.resetEntityLeave();
             }
         }
