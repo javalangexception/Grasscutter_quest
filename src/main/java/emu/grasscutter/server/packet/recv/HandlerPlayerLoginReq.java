@@ -37,7 +37,6 @@ public class HandlerPlayerLoginReq extends PacketHandler {
 
         // Load character from db
         Player player = session.getPlayer();
-
         // Show opening cutscene if player has no avatars
         if (player.getAvatars().getAvatarCount() == 0) {
             // Pick character

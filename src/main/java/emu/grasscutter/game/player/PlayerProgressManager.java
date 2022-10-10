@@ -8,6 +8,9 @@ import emu.grasscutter.data.excels.OpenStateData.OpenStateCondType;
 import emu.grasscutter.game.inventory.GameItem;
 import emu.grasscutter.game.props.ActionReason;
 import emu.grasscutter.game.props.PlayerProperty;
+import emu.grasscutter.game.quest.GameMainQuest;
+import emu.grasscutter.game.quest.GameQuest;
+import emu.grasscutter.game.quest.enums.ParentQuestState;
 import emu.grasscutter.game.quest.enums.QuestState;
 import emu.grasscutter.game.quest.enums.QuestTrigger;
 import emu.grasscutter.net.proto.PropChangeReasonOuterClass.PropChangeReason;
@@ -45,7 +48,7 @@ public class PlayerProgressManager extends BasePlayerDataManager {
 
     // Set of open states that are never unlocked, whether they fulfill the conditions or not.
     public static final Set<Integer> BLACKLIST_OPEN_STATES = Set.of(
-    48      // blacklist OPEN_STATE_LIMIT_REGION_GLOBAL to make Meledy happy. =D Remove this as soon as quest unlocks are fully implemented.
+       // blacklist OPEN_STATE_LIMIT_REGION_GLOBAL to make Meledy happy. =D Remove this as soon as quest unlocks are fully implemented.
     );
 
     // Set of open states that are set per default for all accounts. Can be overwritten by an entry in `map`.
@@ -87,7 +90,9 @@ public class PlayerProgressManager extends BasePlayerDataManager {
         Condition checking for setting open states.
     **********/
     private boolean areConditionsMet(OpenStateData openState) {
-        // Check all conditions and test if at least one of them is violated.
+        if (openState.getId()==1) {
+            System.out.println(1);
+        }
         for (var condition : openState.getCond()) {
             // For level conditions, check if the player has reached the necessary level.
             if (condition.getCondType() == OpenStateCondType.OPEN_STATE_COND_PLAYER_LEVEL) {
@@ -96,16 +101,25 @@ public class PlayerProgressManager extends BasePlayerDataManager {
                 }
             }
             else if (condition.getCondType() == OpenStateCondType.OPEN_STATE_COND_QUEST) {
-                // ToDo: Implement.
+                GameQuest quest = this.player.getQuestManager().getQuestById(condition.getParam());
+                if(quest==null) return false;
+                if(quest.getState()!=QuestState.QUEST_STATE_FINISHED) return false;
             }
             else if (condition.getCondType() == OpenStateCondType.OPEN_STATE_COND_PARENT_QUEST) {
-                // ToDo: Implement.
+                GameQuest quest = this.player.getQuestManager().getQuestById(condition.getParam());
+                if(quest==null)return false;
+                GameMainQuest mainQuest = quest.getMainQuest();
+                if (mainQuest.getState()!= ParentQuestState.PARENT_QUEST_STATE_FINISHED) {
+                    return false;
+                }
             }
             else if (condition.getCondType() == OpenStateCondType.OPEN_STATE_OFFERING_LEVEL) {
                 // ToDo: Implement.
+                return false;
             }
             else if (condition.getCondType() == OpenStateCondType.OPEN_STATE_CITY_REPUTATION_LEVEL) {
                 // ToDo: Implement.
+                return false;
             }
         }
 
@@ -145,10 +159,6 @@ public class PlayerProgressManager extends BasePlayerDataManager {
 
         // Try unlocking all of them.
         for (var state : lockedStates) {
-            // To auto-unlock a state, it has to meet three conditions:
-            // * it can not be a state that is unlocked by the client,
-            // * it has to meet all its unlock conditions, and
-            // * it can not be in the blacklist.
             if (!state.isAllowClientOpen() && this.areConditionsMet(state) && !BLACKLIST_OPEN_STATES.contains(state.getId())) {
                 this.setOpenState(state.getId(), 1, sendNotify);
             }

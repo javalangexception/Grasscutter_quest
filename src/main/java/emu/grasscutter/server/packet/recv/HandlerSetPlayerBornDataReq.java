@@ -61,7 +61,6 @@ public class HandlerSetPlayerBornDataReq extends PacketHandler {
         session.send(new BasePacket(PacketOpcodes.SetPlayerBornDataRsp));
         //添加必要的任务
         session.getPlayer().getQuestManager().onNewPlayerCreate();
-
         // Default mail
         var welcomeMail = GAME_INFO.joinOptions.welcomeMail;
         MailBuilder mailBuilder = new MailBuilder(player.getUid(), new Mail());

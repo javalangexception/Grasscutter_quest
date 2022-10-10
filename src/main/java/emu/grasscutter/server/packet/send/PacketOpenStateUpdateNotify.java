@@ -22,17 +22,9 @@ public class PacketOpenStateUpdateNotify extends BasePacket {
         OpenStateUpdateNotify.Builder proto = OpenStateUpdateNotify.newBuilder();
 
         GameData.getOpenStateList().stream().map(OpenStateData::getId).forEach(id -> {
-            if ((id == 45) && !GAME_OPTIONS.resinOptions.resinUsage) {
-                proto.putOpenStateMap(45, 0);  // Remove resin from map
-                return;
-            }
             // If the player has an open state stored in their map, then it would always override any default value
             if (player.getOpenStates().containsKey(id)) {
                 proto.putOpenStateMap(id, player.getProgressManager().getOpenState(id));
-            }
-            // Otherwise, add the state if it is contained in the set of default open states.
-            else if (PlayerProgressManager.DEFAULT_OPEN_STATES.contains(id)) {
-                proto.putOpenStateMap(id, 1);
             }
         });
 
