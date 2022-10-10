@@ -586,7 +586,7 @@ public class Avatar {
         if (getPlayer() != null && getPlayer().hasSentLoginPackets()) {
             // Update stats for client
             getPlayer().sendPacket(new PacketAvatarFightPropNotify(this));
-            this.getExtraAbilityEmbryos().add("Dvalin_S01_AirGun");
+//            this.getExtraAbilityEmbryos().add("Dvalin_S01_AirGun");
             // Update client abilities
             EntityAvatar entity = this.getAsEntity();
             if (entity != null && (!this.getExtraAbilityEmbryos().equals(prevExtraAbilityEmbryos) || forceSendAbilityChange)) {

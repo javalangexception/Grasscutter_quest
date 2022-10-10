@@ -270,7 +270,7 @@ public class Player {
         this.setProperty(PlayerProperty.PROP_PLAYER_LEVEL, 1, false);
         this.setProperty(PlayerProperty.PROP_IS_SPRING_AUTO_USE, 1, false);
         this.setProperty(PlayerProperty.PROP_SPRING_AUTO_USE_PERCENT, 50, false);
-        this.setProperty(PlayerProperty.PROP_IS_FLYABLE, 1, false);
+        this.setProperty(PlayerProperty.PROP_IS_FLYABLE, 0, false);
         this.setProperty(PlayerProperty.PROP_IS_TRANSFERABLE, 1, false);
         this.setProperty(PlayerProperty.PROP_MAX_STAMINA, 24000, false);
         this.setProperty(PlayerProperty.PROP_CUR_PERSIST_STAMINA, 24000, false);

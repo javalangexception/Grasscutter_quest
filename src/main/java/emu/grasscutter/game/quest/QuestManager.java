@@ -84,17 +84,24 @@ public class QuestManager extends BasePlayerManager {
     }
 
     public void onLogin() {
+        tryCheckAndAcceptQuest();
+    }
+    public void tryCheckAndAcceptQuest(){
+        for (QuestData value : GameData.getQuestDataMap().values()) {
+            if (value.getAcceptCond()==null||value.getAcceptCond().size()==0) {
+                //尝试添加任务
+                GameQuest quest = getQuestById(value.getSubId());
+                if(quest==null){
+                    addQuest(value.getSubId());
+                }else{
+                    if (quest.getState()== QuestState.QUEST_STATE_UNSTARTED) {
+                        addQuest(value.getSubId());
+                    }
+                }
 
-        List<GameMainQuest> activeQuests = getActiveMainQuests();
-        for (GameMainQuest quest : activeQuests) {
-            List<Position> rewindPos = quest.rewind(); // <pos, rotation>
-            if (rewindPos != null) {
-                getPlayer().getPosition().set(rewindPos.get(0));
-                getPlayer().getRotation().set(rewindPos.get(1));
             }
         }
     }
-
     private List<GameMainQuest> addMultMainQuests(Set<Integer> mainQuestIds) {
         List<GameMainQuest> newQuests = new ArrayList<>();
         for (Integer id : mainQuestIds) {
