@@ -5,6 +5,7 @@ import emu.grasscutter.GameConstants;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.excels.PlayerLevelData;
+import emu.grasscutter.data.excels.TriggerExcelConfigData;
 import emu.grasscutter.data.excels.WeatherData;
 import emu.grasscutter.database.DatabaseHelper;
 import emu.grasscutter.game.Account;
@@ -554,28 +555,19 @@ public class Player {
     }
 
     public void onEnterRegion(SceneRegion region) {
-        getQuestManager().forEachActiveQuest(quest -> {
-            if (quest.getTriggers().containsKey("ENTER_REGION_"+ String.valueOf(region.config_id))) {
-                // If trigger hasn't been fired yet
-                if (!Boolean.TRUE.equals(quest.getTriggers().put("ENTER_REGION_"+ String.valueOf(region.config_id), true))) {
-                    //getSession().send(new PacketServerCondMeetQuestListUpdateNotify());
-                    getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_TRIGGER_FIRE, quest.getTriggerData().get("ENTER_REGION_"+ String.valueOf(region.config_id)).getId(),0);
-                }
+        for (TriggerExcelConfigData trigger : GameData.getTriggerExcelConfigDataMap().values()) {
+            if(trigger.getTriggerName().equals("ENTER_REGION_"+region.config_id)){
+                getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_TRIGGER_FIRE,trigger.getId());
             }
-        });
-
+        }
     }
 
     public void onLeaveRegion(SceneRegion region) {
-        getQuestManager().forEachActiveQuest(quest -> {
-            if (quest.getTriggers().containsKey("LEAVE_REGION_"+ String.valueOf(region.config_id))) {
-                // If trigger hasn't been fired yet
-                if (!Boolean.TRUE.equals(quest.getTriggers().put("LEAVE_REGION_"+ String.valueOf(region.config_id), true))) {
-                    getSession().send(new PacketServerCondMeetQuestListUpdateNotify());
-                    getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_TRIGGER_FIRE, quest.getTriggerData().get("LEAVE_REGION_"+ String.valueOf(region.config_id)).getId(),0);
-                }
+        for (TriggerExcelConfigData trigger : GameData.getTriggerExcelConfigDataMap().values()) {
+            if(trigger.getTriggerName().equals("LEAVE_REGION_"+region.config_id)){
+                getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_TRIGGER_FIRE,trigger.getId());
             }
-        });
+        }
     }
 
     public PlayerProfile getProfile() {

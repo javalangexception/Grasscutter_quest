@@ -101,7 +101,9 @@ public class SceneScriptManager {
         getTriggersByEvent(trigger.event).remove(trigger);
     }
     public void resetTriggers(int eventId) {
-        currentTriggers.put(eventId, new HashSet<>());
+        if (currentTriggers.get(eventId)==null) {
+            currentTriggers.put(eventId, new HashSet<>());
+        }
     }
     public void refreshGroup(SceneGroup group, int suiteIndex) {
         if (group==null) {
@@ -194,40 +196,39 @@ public class SceneScriptManager {
         }
 
         for (var region : this.regions.values()) {
-            // currently all condition_ENTER_REGION Events check for avatar, so we have no necessary to add other types of entity
+            // handle enter region
             getScene().getEntities().values()
                 .stream()
-                .filter(e -> e.getEntityType() == EntityType.Avatar.getValue() && region.getMetaRegion().contains(e.getPosition()))
+                .filter(e ->region.getMetaRegion().contains(e.getPosition()))
                 .forEach(region::addEntity);
-
-            var players = region.getScene().getPlayers();
-            int targetID = 0;
-            if (players.size() > 0)
-                targetID = players.get(0).getUid();
-
             if (region.hasNewEntities()) {
                 Grasscutter.getLogger().trace("Call EVENT_ENTER_REGION_{}",region.getMetaRegion().config_id);
-                callEvent(EventType.EVENT_ENTER_REGION, new ScriptArgs(region.getConfigId())
-                    .setSourceEntityId(region.getId())
-                    .setTargetEntityId(targetID)
-                );
+                for (Integer entity : region.getEntities()) {
+                    callEvent(EventType.EVENT_ENTER_REGION, new ScriptArgs(region.getConfigId())
+                        .setSourceEntityId(region.getId())
+                        .setTargetEntityId(entity)
+                    );
+                }
 
                 region.resetNewEntities();
             }
-
+            //handle leave region
             for (int entityId : region.getEntities()) {
                 if (getScene().getEntityById(entityId) == null || !region.getMetaRegion().contains(getScene().getEntityById(entityId).getPosition())) {
                     region.removeEntity(entityId);
 
                 }
             }
+            for (int entityId : region.getEntities()) {
+                if (getScene().getEntityById(entityId) == null || !region.getMetaRegion().contains(getScene().getEntityById(entityId).getPosition())) {
+                    region.removeEntity(entityId);
+                    callEvent(EventType.EVENT_LEAVE_REGION, new ScriptArgs(region.getConfigId())
+                        .setSourceEntityId(region.getId())
+                        .setTargetEntityId(region.getFirstEntityId()));
+                }
+            }
             if (region.entityLeave()) {
-                callEvent(EventType.EVENT_LEAVE_REGION, new ScriptArgs(region.getConfigId())
-                    .setSourceEntityId(region.getId())
-                    .setTargetEntityId(region.getFirstEntityId())
-                );
-
-                region.resetNewEntities();
+                region.resetEntityLeave();
             }
         }
     }
@@ -327,18 +328,15 @@ public class SceneScriptManager {
                     Grasscutter.getLogger().trace("Call Condition Trigger {}, [{},{},{}]", trigger.condition, params.param1, params.source_eid, params.target_eid);
                     if (ret.isboolean() && ret.checkboolean()) {
                         // the SetGroupVariableValueByGroup in tower need the param to record the first stage time
-                        this.callScriptFunc(trigger.action, trigger.currentGroup, params);
                         Grasscutter.getLogger().trace("Call Action Trigger {}", trigger.action);
                         if (trigger.event == EventType.EVENT_ENTER_REGION) {
                             EntityRegion region = this.regions.values().stream().filter(p -> p.getConfigId() == params.param1).toList().get(0);
                             getScene().getPlayers().forEach(p -> p.onEnterRegion(region.getMetaRegion()));
-                            deregisterRegion(region.getMetaRegion());
                         } else if (trigger.event == EventType.EVENT_LEAVE_REGION) {
                             EntityRegion region = this.regions.values().stream().filter(p -> p.getConfigId() == params.param1).toList().get(0);
                             getScene().getPlayers().forEach(p -> p.onLeaveRegion(region.getMetaRegion()));
-                            deregisterRegion(region.getMetaRegion());
                         }
-                        deregisterTrigger(trigger);
+                        this.callScriptFunc(trigger.action, trigger.currentGroup, params);
                     } else {
                         Grasscutter.getLogger().debug("Condition Trigger {} returned {}", trigger.condition, ret);
                     }
@@ -377,7 +375,7 @@ public class SceneScriptManager {
         try {
             return func.call(ScriptLoader.getScriptLibLua(), args);
         }catch (LuaError error) {
-            ScriptLib.logger.error("[LUA] call trigger failed {},{}",name,args,error);
+            ScriptLib.logger.error("[LUA] call trigger failed {} {},{}",ScriptLoader.getScriptLib().getCurrentGroup().get().id,name,args,error);
             return LuaValue.valueOf(-1);
         }
     }
@@ -422,6 +420,11 @@ public class SceneScriptManager {
         return new EntityNPC(getScene(), npc, blockId, suiteId);
     }
     public EntityMonster createMonster(int groupId, int blockId, SceneMonster monster) {
+        for (GameEntity entity : getScene().getEntities().values()) {
+            if (groupId==entity.getGroupId()&&blockId==entity.getBlockId()&&entity.getConfigId()== monster.config_id) {
+                return null;
+            }
+        }
         if (monster == null) {
             return null;
         }
