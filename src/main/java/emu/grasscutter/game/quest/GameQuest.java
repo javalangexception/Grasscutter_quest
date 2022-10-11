@@ -15,6 +15,7 @@ import emu.grasscutter.net.proto.QuestOuterClass.Quest;
 import emu.grasscutter.scripts.data.SceneGroup;
 
 import emu.grasscutter.server.packet.send.PacketChapterStateNotify;
+import emu.grasscutter.server.packet.send.PacketQuestListNotify;
 import emu.grasscutter.server.packet.send.PacketQuestListUpdateNotify;
 import emu.grasscutter.server.packet.send.PacketQuestProgressUpdateNotify;
 import emu.grasscutter.utils.Utils;
@@ -65,6 +66,7 @@ public class GameQuest {
         this.startTime = this.acceptTime;
         this.state = QuestState.QUEST_STATE_UNFINISHED;
         this.getOwner().getSession().send(new PacketQuestListUpdateNotify(this));
+        getOwner().getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_UNLOCK_TRANS_POINT, -1);
         List<QuestData.QuestCondition> triggerCond = questData.getFinishCond().stream()
             .filter(p -> p.getType() == QuestTrigger.QUEST_CONTENT_TRIGGER_FIRE).toList();
         if (triggerCond.size() > 0) {
@@ -137,12 +139,12 @@ public class GameQuest {
     public void finish() {
         this.state = QuestState.QUEST_STATE_FINISHED;
         this.finishTime = Utils.getCurrentSeconds();
-
+        getOwner().getQuestManager().handleGiveAvatar(this.subQuestId);
         if (getQuestData().finishParent()) {
             // This quest finishes the questline - the main quest will also save the quest to db, so we don't have to call save() here
             getMainQuest().finish();
         }
-
+        getOwner().getSession().send(new PacketQuestListUpdateNotify(this));
         getQuestData().getFinishExec().forEach(e -> getOwner().getServer().getQuestSystem().triggerExec(this, e, e.getParam()));
         //Some subQuests have conditions that subQuests are finished (even from different MainQuests)
         getOwner().getQuestManager().triggerEvent(QuestTrigger.QUEST_CONTENT_QUEST_STATE_EQUAL, this.subQuestId, this.state.getValue(),0,0,0);
@@ -154,7 +156,7 @@ public class GameQuest {
                 ChapterStateOuterClass.ChapterState.CHAPTER_STATE_END
             ));
         }
-
+        getOwner().getQuestManager().trySpecialQuest();
         Grasscutter.getLogger().debug("Quest {} is finished", subQuestId);
     }
 
@@ -208,7 +210,6 @@ public class GameQuest {
                 proto.addFailProgressList(i);
             }
         }
-
         return proto.build();
     }
 }

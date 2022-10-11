@@ -10,6 +10,13 @@ import emu.grasscutter.game.quest.handlers.QuestBaseHandler;
 public class ContentUnlockTransPoint extends QuestBaseHandler {
     @Override
     public boolean execute(GameQuest quest, QuestData.QuestCondition condition, String paramStr, int... params) {
+        if (params[0]==-1) {
+            if(quest.getOwner().getUnlockedScenePoints(condition.getParam()[0]).contains(condition.getParam()[1]))
+                return true;
+            else {
+                return false;
+            }
+        }
         return condition.getParam()[0] == params[0] && condition.getParam()[1] == params[1];
     }
 }

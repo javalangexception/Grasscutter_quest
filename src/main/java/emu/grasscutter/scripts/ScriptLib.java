@@ -403,17 +403,22 @@ public class ScriptLib {
 	}
 
 	public int CreateMonster(LuaTable table){
-		logger.debug("[LUA] Call CreateMonster with {}",
-				printTable(table));
-		var configId = table.get("config_id").toint();
-		var delayTime = table.get("delay_time").toint();
+        try {
+            logger.debug("[LUA] Call CreateMonster with {}",
+                printTable(table));
+            var configId = table.get("config_id").toint();
+            var delayTime = table.get("delay_time").toint();
 
-		if(getCurrentGroup().isEmpty()){
-			return 1;
-		}
+            if(getCurrentGroup().isEmpty()){
+                return 1;
+            }
 
-		getSceneScriptManager().spawnMonstersByConfigId(getCurrentGroup().get(), configId, delayTime);
-		return 0;
+            getSceneScriptManager().spawnMonstersByConfigId(getCurrentGroup().get(), configId, delayTime);
+            return 0;
+        }catch (Exception e){
+            return 1;
+        }
+
 	}
 
 	public int TowerMirrorTeamSetUp(int team, int var1) {
@@ -560,12 +565,11 @@ public class ScriptLib {
 
         return 0;
     }
-    public int CreateGroupTimerEvent(int groupId,String source,double count){
-        //todo
-//        getSceneScriptManager().callEventEx(EventType.EVENT_TIMER_EVENT,new ScriptArgs().setParam1(groupId),source);
-        return 0;
-    }
     public void PrintLog(String text){
         logger.debug("[LUA] printLog:"+text);
+    }
+    public int CreateGroupTimerEvent(int groupId,String source,int count){
+        getSceneScriptManager().callEvent(EventType.EVENT_TIMER_EVENT,new ScriptArgs().setParam1(groupId),source);
+        return 0;
     }
 }

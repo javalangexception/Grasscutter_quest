@@ -16,9 +16,15 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 
 public class GameData {
+    @Getter @Setter
+    private static final List<Integer> specialQuest=new ArrayList<>();
+    @Getter
+    private static  Map<Integer,Integer> questGiveAvatar=new HashMap<>();
     // BinOutputs
     private static final Int2ObjectMap<String> abilityHashes = new Int2ObjectOpenHashMap<>();
     private static final Map<String, AbilityEmbryoEntry> abilityEmbryos = new HashMap<>();

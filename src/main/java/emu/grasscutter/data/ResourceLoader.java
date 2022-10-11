@@ -8,8 +8,10 @@ import emu.grasscutter.data.binout.AbilityModifier.AbilityConfigData;
 import emu.grasscutter.data.binout.AbilityModifier.AbilityModifierActionType;
 import emu.grasscutter.data.common.PointData;
 import emu.grasscutter.data.common.ScenePointConfig;
+import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.game.managers.blossom.BlossomConfig;
 import emu.grasscutter.game.quest.QuestEncryptionKey;
+import emu.grasscutter.game.quest.enums.QuestTrigger;
 import emu.grasscutter.game.world.SpawnDataEntry;
 import emu.grasscutter.game.world.SpawnDataEntry.GridBlockId;
 import emu.grasscutter.game.world.SpawnDataEntry.SpawnGroupEntry;
@@ -68,6 +70,7 @@ public class ResourceLoader {
         loadGadgetConfigData();
         loadSpawnData();
         loadQuests();
+        handleSpecialQuest();
         loadScriptSceneData();
         // Load scene points - must be done AFTER resources are loaded
         loadScenePoints();
@@ -75,11 +78,15 @@ public class ResourceLoader {
         loadHomeworldDefaultSaveData();
         loadNpcBornData();
         loadBlossomResources();
-
+        loadQuestGiveAvatar();
         Grasscutter.getLogger().info(translate("messages.status.resources.finish"));
         loadedAll = true;
     }
+    public static void loadQuestGiveAvatar(){
+        Map<Integer, Integer> map = GameData.getQuestGiveAvatar();
+        map.put(35402,10000021);
 
+    }
     public static void loadResources() {
         loadResources(false);
     }
@@ -439,6 +446,18 @@ public class ResourceLoader {
             Grasscutter.getLogger().debug("Loaded " + GameData.getSceneNpcBornData().size() + " SceneNpcBornDatas.");
         } catch (IOException e) {
             Grasscutter.getLogger().error("Failed to load SceneNpcBorn folder.");
+        }
+    }
+    private static void handleSpecialQuest(){
+        for (QuestData subQuest : GameData.getQuestDataMap().values()) {
+            if (!subQuest.getAcceptCond().isEmpty()||subQuest.getAcceptCond().size()==1) {
+                    if (subQuest.getAcceptCond().get(0).getType()== QuestTrigger.QUEST_COND_STATE_EQUAL) {
+                        if (GameData.getQuestDataMap().get(subQuest.getAcceptCond().get(0).getParam()[0]).getMainId()!=subQuest.getMainId()) {
+                            GameData.getSpecialQuest().add(subQuest.getSubId());
+                        }
+                    }
+
+            }
         }
     }
 

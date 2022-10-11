@@ -6,9 +6,11 @@ import java.util.function.Consumer;
 import emu.grasscutter.Grasscutter;
 import emu.grasscutter.data.GameData;
 import emu.grasscutter.data.binout.MainQuestData;
+import emu.grasscutter.data.excels.AvatarData;
 import emu.grasscutter.data.excels.QuestData;
 import emu.grasscutter.data.excels.QuestData.QuestCondition;
 import emu.grasscutter.database.DatabaseHelper;
+import emu.grasscutter.game.avatar.Avatar;
 import emu.grasscutter.game.player.BasePlayerManager;
 import emu.grasscutter.game.player.Player;
 import emu.grasscutter.game.quest.enums.ParentQuestState;
@@ -27,15 +29,13 @@ public class QuestManager extends BasePlayerManager {
     @Getter private final Player player;
     @Getter private final Int2ObjectMap<GameMainQuest> mainQuests;
     @Getter private List<GameQuest> addToQuestListUpdateNotify;
+
     /*
         On SetPlayerBornDataReq, the server sends FinishedParentQuestNotify, with this exact
         parentQuestList. Captured on Game version 2.7
         Note: quest 40063 is already set to finished, with childQuest 4006406's state set to 3
     */
 
-    private static Set<Integer> newPlayerMainQuests = Set.of(303,318,348,349,350,351,416,500,
-        501,502,503,504,505,506,507,508,509,20000,20507,20509,21004,21005,21010,21011,21016,21017,
-        21020,21021,21025,40063,70121,70124,70511,71010,71012,71013,71015,71016,71017,71555);
 
     /*
         On SetPlayerBornDataReq, the server sends ServerCondMeetQuestListUpdateNotify, with this exact
@@ -73,7 +73,31 @@ public class QuestManager extends BasePlayerManager {
         this.mainQuests = new Int2ObjectOpenHashMap<>();
         this.addToQuestListUpdateNotify = new ArrayList<>();
     }
+    public void trySpecialQuest(){
+        for (Integer id : GameData.getSpecialQuest()) {
+            if (GameData.getQuestDataMap().get(id).getAcceptCond().size()==1) {
+                QuestCondition condition = GameData.getQuestDataMap().get(id).getAcceptCond().get(0);
+                if(condition.getType()==QuestTrigger.QUEST_COND_STATE_EQUAL){
+                    int Id = condition.getParam()[0];
+                    int state = condition.getParam()[1];
+                    GameQuest quest = getQuestById(Id);
+                    GameQuest target = getQuestById(id);
+                    if (quest!=null) {
+                        if (quest.getState().getValue()==state) {
+                            if (target==null) {
+                                addQuest(id);
+                            }else {
+                                if (target.getState()== QuestState.UNSTARTED) {
+                                    target.start();
+                                }
+                            }
+                        }
+                    }
 
+                }
+            }
+        }
+    }
     public void onNewPlayerCreate() {
             //添加基础任务----神像相关，任务相关，openstate相关
         for (QuestData questData : GameData.getQuestDataMap().values()) {
@@ -282,6 +306,7 @@ public class QuestManager extends BasePlayerManager {
             case QUEST_CONTENT_ADD_QUEST_PROGRESS:
             case QUEST_CONTENT_LEAVE_SCENE:
             case QUEST_CONTENT_LUA_NOTIFY:
+            case QUEST_CONTENT_OBTAIN_ITEM:
                 for (GameMainQuest mainQuest : checkMainQuests) {
                     mainQuest.tryFailSubQuests(condType, paramStr, params);
                     mainQuest.tryFinishSubQuests(condType, paramStr, params);
@@ -301,7 +326,23 @@ public class QuestManager extends BasePlayerManager {
         }
 
     }
-
+    public void handleGiveAvatar(int finishId){
+        if (!GameData.getQuestGiveAvatar().containsKey(finishId)) {
+            return;
+        }
+        int avatarId = GameData.getQuestGiveAvatar().get(finishId);
+        if (avatarId>0) {
+            AvatarData avatarData = GameData.getAvatarDataMap().get(avatarId);
+            if(avatarData!=null){
+                Avatar avatar = new Avatar(avatarData);
+                avatar.setLevel(1);
+                avatar.setPromoteLevel(1);
+                avatar.forceConstellationLevel(0);
+                avatar.recalcStats();
+                getPlayer().addAvatar(avatar,true);
+            }
+        }
+    }
     public List<QuestGroupSuite> getSceneGroupSuite(int sceneId) {
         return getMainQuests().values().stream()
             .filter(i -> i.getState() != ParentQuestState.PARENT_QUEST_STATE_FINISHED)

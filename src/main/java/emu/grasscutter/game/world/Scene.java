@@ -367,7 +367,7 @@ public class Scene {
     public void checkNpcGroup() {
         Set<SceneNpcBornEntry> npcBornEntries = ConcurrentHashMap.newKeySet();
         for (Player player : this.getPlayers()) {
-            npcBornEntries.addAll(loadNpcForPlayer(player));
+           npcBornEntries.addAll(loadNpcForPlayer(player));
         }
 
         // clear the unreachable group for client
@@ -596,7 +596,9 @@ public class Scene {
 
             entities.addAll(scriptManager.getGadgetsInGroupSuite(group, suiteData));
             entities.addAll(scriptManager.getMonstersInGroupSuite(group, suiteData));
-
+            for (Player player : getPlayers()) {
+                player.getSession().send(new PacketGroupSuiteNotify(group.id,suite));
+            }
             scriptManager.registerRegionInGroupSuite(group, suiteData);
         }
 

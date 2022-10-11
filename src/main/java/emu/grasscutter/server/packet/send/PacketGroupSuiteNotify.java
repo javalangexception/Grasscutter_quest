@@ -25,7 +25,6 @@ public class PacketGroupSuiteNotify extends BasePacket {
             .forEach(x -> x.getSuiteIdList().forEach(y ->
                 proto.putGroupMap(x.getGroupId(), y)
             ));
-
 		this.setData(proto);
 
 	}
@@ -46,7 +45,6 @@ public class PacketGroupSuiteNotify extends BasePacket {
         var proto = GroupSuiteNotifyOuterClass.GroupSuiteNotify.newBuilder();
 
         questGroupSuites.forEach(i -> proto.putGroupMap(i.getGroup(), i.getSuite()));
-
         this.setData(proto);
     }
 }

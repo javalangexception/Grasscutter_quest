@@ -119,6 +119,7 @@ public class SceneScriptManager {
                 this.currentTriggers.get(trigger.event).add(trigger);
             }
         }
+        scene.getScriptManager().removeMonstersInGroup(group, null);
         spawnMonstersInGroup(group, suite);
         spawnGadgetsInGroup(group, suite);
     }
@@ -302,14 +303,23 @@ public class SceneScriptManager {
         getScene().addEntity(createMonster(group.id, group.block_id, group.monsters.get(configId)));
     }
     // Events
-    public void callEvent(int eventType, ScriptArgs params) {
+    public void callEvent(int eventType, ScriptArgs params,String source) {
         /**
          * We use ThreadLocal to trans SceneScriptManager context to ScriptLib, to avoid eval script for every groups' trigger in every scene instances.
          * But when callEvent is called in a ScriptLib func, it may cause NPE because the inner call cleans the ThreadLocal so that outer call could not get it.
          * e.g. CallEvent -> set -> ScriptLib.xxx -> CallEvent -> set -> remove -> NPE -> (remove)
          * So we use thread pool to clean the stack to avoid this new issue.
          */
-        eventExecutor.submit(() -> this.realCallEvent(eventType, params));
+        if(eventType==EventType.EVENT_ENTER_REGION||eventType==EventType.EVENT_LEAVE_REGION){
+            eventExecutor.submit(() -> this.realCallEvent(eventType, params));
+        }
+        else {
+            eventExecutor.submit(()->this.realCallEventEx(eventType,params,source));
+        }
+    }
+    public void callEvent(int eventType, ScriptArgs params) {
+
+      callEvent(eventType,params,"");
     }
 
     private void realCallEvent(int eventType, ScriptArgs params) {
@@ -353,6 +363,63 @@ public class SceneScriptManager {
                 }
             }
         }finally {
+            // make sure it is removed
+            ScriptLoader.getScriptLib().removeSceneScriptManager();
+        }
+    }
+    private void realCallEventEx(int eventType, ScriptArgs params,String s) {
+        try {
+            ScriptLoader.getScriptLib().setSceneScriptManager(this);
+            Set<SceneTrigger> relevantTriggers = new HashSet<>();
+            for (SceneTrigger sceneTrigger : getTriggersByEvent(eventType)) {
+                relevantTriggers.add(sceneTrigger);
+            }
+            int configId=0;
+            int sourceId=0;
+            if(params.getSourceEntityId()!=0){
+                sourceId=params.getSourceEntityId();
+                GameEntity entity = getScene().getEntities().get(params.getSourceEntityId());
+                if(entity!=null){
+                    configId=entity.getConfigId();
+                }
+            }
+            String source="";
+            if(configId!=0){
+                source=String.valueOf(configId);
+            }else {
+                source=String.valueOf(sourceId);
+            }
+            if(!s.equals("")){
+                source=s;
+            }
+            for (SceneTrigger trigger : relevantTriggers) {
+                try {
+                    if (!trigger.source.isEmpty() && !trigger.source.equals(source)&&trigger.condition.equals("")) {
+                        continue;
+                    }
+                    ScriptLoader.getScriptLib().setCurrentGroup(trigger.currentGroup);
+                    if (trigger.condition.equals("")) {
+                        this.callScriptFunc(trigger.action, trigger.currentGroup, params);
+                    }
+                    else {
+                        ScriptLoader.getScriptLib().setCurrentGroup(trigger.currentGroup);
+                        LuaValue ret = this.callScriptFunc(trigger.condition, trigger.currentGroup, params);
+                        Grasscutter.getLogger().trace("Call Condition Trigger {}, [{},{},{}]", trigger.condition, params.param1, params.source_eid, params.target_eid);
+                        if (ret.isboolean() && ret.checkboolean()) {
+                            // the SetGroupVariableValueByGroup in tower need the param to record the first stage time
+                            this.callScriptFunc(trigger.action, trigger.currentGroup, params);
+                            Grasscutter.getLogger().trace("Call Action Trigger {}", trigger.action);
+                        } else {
+                            Grasscutter.getLogger().debug("Condition Trigger {} returned {}", trigger.condition, ret);
+                        }
+
+                    }
+                    //TODO some ret do not bool
+                } finally {
+                    ScriptLoader.getScriptLib().removeCurrentGroup();
+                }
+            }
+        } finally {
             // make sure it is removed
             ScriptLoader.getScriptLib().removeSceneScriptManager();
         }
@@ -493,16 +560,25 @@ public class SceneScriptManager {
         return meta.sceneBlockIndex;
     }
     public void removeMonstersInGroup(SceneGroup group, SceneSuite suite) {
-        var configSet = suite.sceneMonsters.stream()
+        if (suite == null) {
+            var toRemove = getScene().getEntities().values().stream()
+                .filter(e -> e instanceof EntityMonster)
+                .filter(e -> e.getGroupId() == group.id)
+                .toList();
+
+            getScene().removeEntities(toRemove, VisionTypeOuterClass.VisionType.VISION_TYPE_MISS);
+        } else {
+            var configSet = suite.sceneMonsters.stream()
                 .map(m -> m.config_id)
                 .collect(Collectors.toSet());
-        var toRemove = getScene().getEntities().values().stream()
+            var toRemove = getScene().getEntities().values().stream()
                 .filter(e -> e instanceof EntityMonster)
                 .filter(e -> e.getGroupId() == group.id)
                 .filter(e -> configSet.contains(e.getConfigId()))
                 .toList();
 
-        getScene().removeEntities(toRemove, VisionTypeOuterClass.VisionType.VISION_TYPE_MISS);
+            getScene().removeEntities(toRemove, VisionTypeOuterClass.VisionType.VISION_TYPE_MISS);
+        }
     }
     public void removeGadgetsInGroup(SceneGroup group, SceneSuite suite) {
         var configSet = suite.sceneGadgets.stream()
