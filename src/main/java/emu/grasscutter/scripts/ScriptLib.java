@@ -438,8 +438,12 @@ public class ScriptLib {
 		}
 
 		var gadget = group.get().gadgets.get(configId);
+        if(gadget==null){
+            return 1;
+        }
 		var entity = getSceneScriptManager().createGadget(group.get().id, group.get().block_id, gadget);
 
+        if(entity==null) return 1;
 		getSceneScriptManager().addEntity(entity);
 
 		return 0;

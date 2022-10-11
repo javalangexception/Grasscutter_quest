@@ -218,7 +218,6 @@ public class Scene {
     public synchronized void addEntityToSingleClient(Player player, GameEntity entity) {
         this.addEntityDirectly(entity);
         player.sendPacket(new PacketSceneEntityAppearNotify(entity));
-
     }
     public void addEntities(Collection<? extends GameEntity> entities) {
         addEntities(entities, VisionType.VISION_TYPE_BORN);

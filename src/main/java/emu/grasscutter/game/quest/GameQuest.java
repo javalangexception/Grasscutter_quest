@@ -64,6 +64,7 @@ public class GameQuest {
         this.acceptTime = Utils.getCurrentSeconds();
         this.startTime = this.acceptTime;
         this.state = QuestState.QUEST_STATE_UNFINISHED;
+        this.getOwner().getSession().send(new PacketQuestListUpdateNotify(this));
         List<QuestData.QuestCondition> triggerCond = questData.getFinishCond().stream()
             .filter(p -> p.getType() == QuestTrigger.QUEST_CONTENT_TRIGGER_FIRE).toList();
         if (triggerCond.size() > 0) {
@@ -160,6 +161,7 @@ public class GameQuest {
     //TODO
     public void fail() {
         this.state = QuestState.QUEST_STATE_FAILED;
+        getOwner().getSession().send(new PacketQuestListUpdateNotify(this));
         this.finishTime = Utils.getCurrentSeconds();
 
         getQuestData().getFailExec().forEach(e -> getOwner().getServer().getQuestSystem().triggerExec(this, e, e.getParam()));

@@ -260,9 +260,9 @@ public class QuestManager extends BasePlayerManager {
                 break;
             //finish Conds
             case QUEST_CONTENT_COMPLETE_TALK:
+            case QUEST_CONTENT_SKILL:
             case QUEST_CONTENT_FINISH_PLOT:
             case QUEST_CONTENT_COMPLETE_ANY_TALK:
-            case QUEST_CONTENT_LUA_NOTIFY:
             case QUEST_CONTENT_QUEST_VAR_EQUAL:
             case QUEST_CONTENT_QUEST_VAR_GREATER:
             case QUEST_CONTENT_QUEST_VAR_LESS:
@@ -281,6 +281,7 @@ public class QuestManager extends BasePlayerManager {
             case QUEST_CONTENT_QUEST_STATE_EQUAL:
             case QUEST_CONTENT_ADD_QUEST_PROGRESS:
             case QUEST_CONTENT_LEAVE_SCENE:
+            case QUEST_CONTENT_LUA_NOTIFY:
                 for (GameMainQuest mainQuest : checkMainQuests) {
                     mainQuest.tryFailSubQuests(condType, paramStr, params);
                     mainQuest.tryFinishSubQuests(condType, paramStr, params);

@@ -262,7 +262,6 @@ public class GameMainQuest {
 
                 if (shouldAccept) {
                     subQuestWithCond.start();
-                    getQuestManager().getAddToQuestListUpdateNotify().add(subQuestWithCond);
                 }
 
             }
@@ -297,8 +296,9 @@ public class GameMainQuest {
                 boolean shouldFail = LogicType.calculate(subQuestWithCond.getQuestData().getFailCondComb(), subQuestWithCond.getFailProgressList());
 
                 if (shouldFail) {
+
                     subQuestWithCond.fail();
-                    getQuestManager().getAddToQuestListUpdateNotify().add(subQuestWithCond);
+
                 }
             }
 

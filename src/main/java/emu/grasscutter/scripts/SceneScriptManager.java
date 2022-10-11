@@ -283,7 +283,7 @@ public class SceneScriptManager {
             return;
         }
         this.addEntities(suite.sceneMonsters.stream()
-                .map(mob -> createMonster(group.id, group.block_id, mob)).toList());
+                .map(mob -> createMonster(group.id, group.block_id, mob)).filter(Objects::nonNull).toList());
     }
 
     public void startMonsterTideInGroup(SceneGroup group, Integer[] ordersConfigId, int tideCount, int sceneLimit) {
@@ -320,9 +320,16 @@ public class SceneScriptManager {
                 List<SceneTrigger> relevantTriggersList = this.getTriggersByEvent(eventType).stream()
                     .filter(p -> p.condition.contains(String.valueOf(params.param1))).toList();
                 relevantTriggers = new HashSet<>(relevantTriggersList);
-            } else {relevantTriggers = this.getTriggersByEvent(eventType);}
+            } else {
+                for (SceneTrigger sceneTrigger : getTriggersByEvent(eventType)) {
+                    relevantTriggers.add(sceneTrigger);
+                }
+            }
             for (SceneTrigger trigger : relevantTriggers) {
                 try {
+                    if (trigger.condition.contains("ANY_MONSTER_DIE_515")) {
+                        System.out.println(1);
+                    }
                     ScriptLoader.getScriptLib().setCurrentGroup(trigger.currentGroup);
                     LuaValue ret = this.callScriptFunc(trigger.condition, trigger.currentGroup, params);
                     Grasscutter.getLogger().trace("Call Condition Trigger {}, [{},{},{}]", trigger.condition, params.param1, params.source_eid, params.target_eid);
@@ -422,7 +429,15 @@ public class SceneScriptManager {
     public EntityMonster createMonster(int groupId, int blockId, SceneMonster monster) {
         for (GameEntity entity : getScene().getEntities().values()) {
             if (groupId==entity.getGroupId()&&blockId==entity.getBlockId()&&entity.getConfigId()== monster.config_id) {
-                return null;
+                if(entity.isAlive()){
+                    return null;
+                }
+                else {
+                    getScene().removeEntity(entity);
+                    getScene().getSpawnedEntities().remove(entity);
+                    getScene().getDeadSpawnedEntities().remove(entity);
+                }
+                break;
             }
         }
         if (monster == null) {

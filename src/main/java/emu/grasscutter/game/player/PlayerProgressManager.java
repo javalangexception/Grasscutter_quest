@@ -82,7 +82,7 @@ public class PlayerProgressManager extends BasePlayerDataManager {
             }
         }
     }
-    private void setOpenState(int openState, int value) {
+    public void setOpenState(int openState, int value) {
         this.setOpenState(openState, value, true);
     }
 
